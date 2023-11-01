@@ -780,7 +780,6 @@ class SearchScholarQuery(ScholarQuery):
         """single int of the page number to start on, depending on the Nr of results per page"""
         if option_count == None:
             option_count = 10
-        print('page', page)
         self.page = str(int(page)*option_count)
     
     def set_words(self, words):
