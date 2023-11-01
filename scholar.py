@@ -746,6 +746,7 @@ class SearchScholarQuery(ScholarQuery):
     configure on the Scholar website, in the advanced search options.
     """
     SCHOLAR_QUERY_URL = ScholarConf.SCHOLAR_SITE + '/scholar?' \
+        + 'start=%(page)s' \
         + 'as_q=%(words)s' \
         + '&as_epq=%(phrase)s' \
         + '&as_oq=%(words_some)s' \
@@ -768,12 +769,20 @@ class SearchScholarQuery(ScholarQuery):
         self.words_none = None # None of these words
         self.phrase = None
         self.scope_title = False # If True, search in title only
+        self.page = None
         self.author = None
         self.pub = None
         self.timeframe = [None, None]
         self.include_patents = True
         self.include_citations = True
 
+    def set_page(self, page, option_count):
+        """single int of the page number to start on, depending on the Nr of results per page"""
+        if option_count == None:
+            option_count = 10
+        print('page', page)
+        self.page = str(int(page)*option_count)
+    
     def set_words(self, words):
         """Sets words that *all* must be found in the result."""
         self.words = words
@@ -848,6 +857,7 @@ class SearchScholarQuery(ScholarQuery):
                    'phrase': self.phrase or '',
                    'scope': 'title' if self.scope_title else 'any',
                    'authors': self.author or '',
+                   'page': self.page or '0',
                    'pub': self.pub or '',
                    'ylo': self.timeframe[0] or '',
                    'yhi': self.timeframe[1] or '',
@@ -1175,6 +1185,8 @@ scholar.py -c 5 -a "albert einstein" -t --none "quantum theory" --after 1970"""
                      help='Results must contain none of these words. See -s|--some re. formatting')
     group.add_option('-p', '--phrase', metavar='PHRASE', default=None,
                      help='Results must contain exact phrase')
+    group.add_option('--page', type='int', metavar='PAGE', default=None,
+                     help='Integer of Page Nr. to be parsed')
     group.add_option('-t', '--title-only', action='store_true', default=False,
                      help='Search title only')
     group.add_option('-P', '--pub', metavar='PUBLICATIONS', default=None,
@@ -1275,6 +1287,8 @@ scholar.py -c 5 -a "albert einstein" -t --none "quantum theory" --after 1970"""
             query.set_words_none(options.none)
         if options.phrase:
             query.set_phrase(options.phrase)
+        if options.page:
+            query.set_page(options.page, options.count)
         if options.title_only:
             query.set_scope(True)
         if options.pub:
